@@ -1,6 +1,8 @@
 package com.etnetera.hr.controller;
 
+import com.etnetera.hr.data.FrameworkVersion;
 import com.etnetera.hr.data.JavaScriptFramework;
+import com.etnetera.hr.repository.FrameworkVersionRepository;
 import com.etnetera.hr.repository.JavaScriptFrameworkRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,56 +16,110 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class JavaScriptFrameworkController extends EtnRestController {
 
-	private final JavaScriptFrameworkRepository repository;
+	private final JavaScriptFrameworkRepository frameworkRepository;
+	private final FrameworkVersionRepository frameworkVersionRepository;
 
 	@Autowired
-	public JavaScriptFrameworkController(JavaScriptFrameworkRepository repository) {
-		this.repository = repository;
+	public JavaScriptFrameworkController(JavaScriptFrameworkRepository frameworkRepository, FrameworkVersionRepository frameworkVersionRepository) {
+		this.frameworkRepository = frameworkRepository;
+		this.frameworkVersionRepository = frameworkVersionRepository;
 	}
 
+
 	@GetMapping("/frameworks")
-	public Iterable<JavaScriptFramework> frameworks() {
-		return repository.findAll();
+	public Iterable<JavaScriptFramework> getFrameworks() {
+		return frameworkRepository.findAll();
+	}
+
+	@GetMapping("/versions")
+	public Iterable<FrameworkVersion> getVersions() {
+		return frameworkVersionRepository.findAll();
 	}
 
 
 	@PostMapping("/frameworks")
 	JavaScriptFramework newFramework(@RequestBody JavaScriptFramework newFramework){
-		return repository.save(newFramework);
+		return frameworkRepository.save(newFramework);
+	}
+
+
+	@PostMapping("/versions")
+	FrameworkVersion newVersion(@RequestBody FrameworkVersion newVersion){
+		return frameworkVersionRepository.save(newVersion);
 	}
 
 	@GetMapping("/frameworks/{id}")
-	JavaScriptFramework searchById (@PathVariable Long id){
-		return repository.findById(id)
+	JavaScriptFramework searchFrameworksById (@PathVariable Long id){
+		return frameworkRepository.findById(id)
 				.orElseThrow(() -> new FrameworkNotFoundException(id));
+	}
+
+	@GetMapping("/versions/{id}")
+	FrameworkVersion searchVersionsById(@PathVariable Long id){
+		return frameworkVersionRepository.findById(id)
+				.orElseThrow(() -> new VersionNotFoundException(id));
 	}
 
 	@GetMapping("/search")
 	Iterable<JavaScriptFramework> searchByName(@RequestParam String name){
-		return repository.findByName(name);
+		return frameworkRepository.findByName(name);
 	}
 
 	@PutMapping("/frameworks/{id}")
 	JavaScriptFramework replaceFramework (@RequestBody JavaScriptFramework newFramework, @PathVariable Long id){
 
-		return repository.findById(id)
+		return frameworkRepository.findById(id)
 				.map(framework -> {
 					framework.setName(newFramework.getName());
-					framework.setDeprecationDate(newFramework.getDeprecationDate());
-					framework.setHypeLevel(newFramework.getHypeLevel());
-					framework.setVersion(newFramework.getVersion());
-					return repository.save(framework);
+					return frameworkRepository.save(framework);
 				})
 				.orElseGet(() -> {
 					newFramework.setId(id);
-					return repository.save(newFramework);
+					return frameworkRepository.save(newFramework);
+				});
+	}
+
+	@PutMapping("/versions/{id}")
+	FrameworkVersion replaceVersion(@RequestBody FrameworkVersion newVersion, @PathVariable Long id){
+
+		return frameworkVersionRepository.findById(id)
+				.map(version -> {
+					version.setVersion(newVersion.getVersion());
+					version.setDeprecationDate(newVersion.getDeprecationDate());
+					version.setHypeLevel(newVersion.getHypeLevel());
+					return frameworkVersionRepository.save(newVersion);
+				})
+				.orElseGet(() -> {
+					newVersion.setId(id);
+					return frameworkVersionRepository.save(newVersion);
 				});
 	}
 
 	@DeleteMapping("/frameworks/{id}")
 	void deleteFramework(@PathVariable Long id){
-		repository.deleteById(id);
+		frameworkRepository.deleteById(id);
 	}
 
+	@DeleteMapping("/versions/{id}")
+	void deleteVersion(@PathVariable Long id) {
+		frameworkVersionRepository.deleteById(id
+		);
+	}
+
+	public JavaScriptFramework addVersionToFramework(Long frameworkId, Long versionId){
+		JavaScriptFramework framework = searchFrameworksById(frameworkId);
+		FrameworkVersion version = searchVersionsById(versionId);
+
+		framework.addVersion(version);
+		return framework;
+	}
+
+	public JavaScriptFramework removeVersionFromFramework(Long frameworkId, Long versionId){
+		JavaScriptFramework framework = searchFrameworksById(frameworkId);
+		FrameworkVersion version = searchVersionsById(versionId);
+
+		framework.removeVersion(version);
+		return framework;
+	}
 
 }

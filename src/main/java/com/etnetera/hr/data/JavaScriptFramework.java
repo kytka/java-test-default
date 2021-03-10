@@ -1,7 +1,8 @@
 package com.etnetera.hr.data;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Simple data entity describing basic properties of every JavaScript framework.
@@ -10,6 +11,7 @@ import java.time.LocalDate;
  *
  */
 @Entity
+@Table(name = "framework")
 public class JavaScriptFramework {
 
 	@Id
@@ -19,17 +21,16 @@ public class JavaScriptFramework {
 	@Column(nullable = false, length = 30)
 	private String name;
 
-	private String version;
+	@OneToMany(mappedBy = "framework")
+	private List<FrameworkVersion> versionList = new ArrayList<>();
 
-	private LocalDate deprecationDate;
-
-	public enum HypeLevel {
-		NOBODY_USES_IT,
-		SOMEBODY_USES_IT,
-		EVERYBODY_USES_IT
+	public void addVersion(FrameworkVersion version){
+		versionList.add(version);
 	}
 
-	private HypeLevel hypeLevel = HypeLevel.NOBODY_USES_IT;
+	public void removeVersion(FrameworkVersion version){
+		versionList.remove(version);
+	}
 
 	public JavaScriptFramework() {
 		//TODO this.name = "no name provided";
@@ -37,13 +38,6 @@ public class JavaScriptFramework {
 
 	public JavaScriptFramework(String name) {
 		this.name = name;
-	}
-
-	public JavaScriptFramework(String name, String version, LocalDate deprecationDate, HypeLevel hypeLevel) {
-		this.name = name;
-		this.version = version;
-		this.deprecationDate = deprecationDate;
-		this.hypeLevel = hypeLevel;
 	}
 
 	public Long getId() {
@@ -62,28 +56,12 @@ public class JavaScriptFramework {
 		this.name = name;
 	}
 
-	public String getVersion() {
-		return version;
+	public List<FrameworkVersion> getVersionList() {
+		return versionList;
 	}
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
-
-	public LocalDate getDeprecationDate() {
-		return deprecationDate;
-	}
-
-	public void setDeprecationDate(LocalDate deprecationDate) {
-		this.deprecationDate = deprecationDate;
-	}
-
-	public HypeLevel getHypeLevel() {
-		return hypeLevel;
-	}
-
-	public void setHypeLevel(HypeLevel hypeLevel) {
-		this.hypeLevel = hypeLevel;
+	public void setVersionList(List<FrameworkVersion> versionList) {
+		this.versionList = versionList;
 	}
 
 	@Override
